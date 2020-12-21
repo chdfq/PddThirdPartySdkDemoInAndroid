@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.marten.pdd_sdk_demo.R;
+import com.marten.pdd_sdk_demo.tools.ImageLoaderTool;
 import com.pdd.pop.sdk.http.api.pop.response.PddDdkGoodsSearchResponse;
 
 import java.text.SimpleDateFormat;
@@ -48,16 +49,18 @@ public class GoodsAdapter extends RecyclerView.Adapter<GoodsAdapter.ViewHolder> 
     public void onBindViewHolder(@NonNull GoodsAdapter.ViewHolder holder, int position) {
         PddDdkGoodsSearchResponse.GoodsSearchResponseGoodsListItem item = list.get(position);
 
+        //使用封装类，方便维护
+        ImageLoaderTool.imageLoader(context,item.getGoodsThumbnailUrl(),holder.mIvGoods);
         //加载图片
 //        Picasso.get()
 //                .load(item.getGoodsThumbnailUrl())
 //                .placeholder(R.color.gray)
 //                .into(holder.mIvGoods);
-        Glide.with(context)
-                .load(item.getGoodsThumbnailUrl())
-                .placeholder(R.color.gray)
-                .centerCrop()
-                .into(holder.mIvGoods);
+//        Glide.with(context)
+//                .load(item.getGoodsThumbnailUrl())
+//                .placeholder(R.color.gray)
+//                .centerCrop()
+//                .into(holder.mIvGoods);
 
         holder.mTvGoodsName.setText(item.getGoodsName());
         holder.mTvGoodsDescription.setText(item.getGoodsDesc());
