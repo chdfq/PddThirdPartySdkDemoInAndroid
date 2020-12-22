@@ -9,6 +9,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.marten.pdd_sdk_demo.R;
 import com.marten.pdd_sdk_demo.adapter.GoodsAdapter;
+import com.marten.pdd_sdk_demo.adapter.NewsAdapter;
+import com.marten.pdd_sdk_demo.domain.News;
+import com.marten.pdd_sdk_demo.tools.HttpTools;
 import com.pdd.pop.sdk.common.util.JsonUtil;
 import com.pdd.pop.sdk.http.PopClient;
 import com.pdd.pop.sdk.http.PopHttpClient;
@@ -19,6 +22,10 @@ import com.scwang.smart.refresh.layout.api.RefreshLayout;
 import com.scwang.smart.refresh.layout.listener.OnLoadMoreListener;
 import com.scwang.smart.refresh.layout.listener.OnRefreshListener;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -64,7 +71,8 @@ public class MainActivity extends AppCompatActivity {
 
         mRvGoods = findViewById(R.id.rv_goods);
         mRvGoods.setLayoutManager(new LinearLayoutManager(this));
-        getGoods();
+        //getGoods();
+        getNewsData();
     }
 
     private void getGoods() {
@@ -134,5 +142,50 @@ public class MainActivity extends AppCompatActivity {
 //                        }.getType()); //Gson转list
             }
         }).start();
+    }
+
+    public void getNewsData() {
+//        HttpTools.getData("http://v.juhe.cn/toutiao/index?key=c60ab75f8ce6994bc6a06ea5adb617db");
+        HttpTools.postData("http://v.juhe.cn/toutiao/index", new HttpTools.HttpBackListener() {
+            @Override
+            public void onSuccess(String data, int code) {
+                try {
+                    JSONObject jsonObject = new JSONObject(data);
+                    String result = jsonObject.getString("result");
+                    JSONObject jsonObject2 = new JSONObject(result);
+                    JSONArray jsonArray = jsonObject2.getJSONArray("data");
+                    List<News> list = new ArrayList<>();
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        JSONObject jsonObject3 = jsonArray.getJSONObject(i);
+                        News news1 = new News();
+                        news1.setUniquekey(jsonObject3.getString("uniquekey"));
+                        news1.setTitle(jsonObject3.getString("title"));
+                        news1.setDate(jsonObject3.getString("date"));
+                        news1.setCategory(jsonObject3.getString("category"));
+                        news1.setAuthor_name(jsonObject3.getString("author_name"));
+                        news1.setUrl(jsonObject3.getString("url"));
+                        news1.setThumbnail_pic_s(jsonObject3.getString("thumbnail_pic_s"));
+//                        news1.setThumbnail_pic_s02(jsonObject3.getString("thumbnail_pic_s02")); //有些item只有thumbnail_pic_s，不然会跳出循环
+//                        news1.setThumbnail_pic_s03(jsonObject3.getString("thumbnail_pic_s03"));
+                        list.add(news1);
+                    }
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            NewsAdapter newsAdapter = new NewsAdapter(MainActivity.this, list);
+                            mRvGoods.setAdapter(newsAdapter);
+                        }
+                    });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onError(String errorMes, int code) {
+
+            }
+        });
     }
 }
