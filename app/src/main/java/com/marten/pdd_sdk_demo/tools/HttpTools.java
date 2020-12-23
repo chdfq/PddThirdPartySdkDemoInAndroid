@@ -88,7 +88,7 @@ public class HttpTools {
                     //HttpURLConnection 发起连接
                     connection.connect();
 
-                    String body = "type=guonei&key=c60ab75f8ce6994bc6a06ea5adb617db";
+                    String body = "key=c60ab75f8ce6994bc6a06ea5adb617db";
                     BufferedWriter writer = new BufferedWriter(
                             new OutputStreamWriter(connection.getOutputStream(), StandardCharsets.UTF_8)
                     );

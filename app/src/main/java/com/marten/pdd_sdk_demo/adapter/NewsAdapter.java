@@ -1,6 +1,7 @@
 package com.marten.pdd_sdk_demo.adapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.marten.pdd_sdk_demo.R;
+import com.marten.pdd_sdk_demo.activity.WebViewActivity;
 import com.marten.pdd_sdk_demo.domain.News;
 import com.marten.pdd_sdk_demo.tools.ImageLoaderTool;
 
@@ -64,6 +66,15 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.ViewHolder> {
         //holder.mTvCouponEndTime.setText(item.getUniquekey());
         holder.mTvCouponEndTime.setText("");
         holder.mTvSalesTip.setText(item.getDate());
+
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(context, WebViewActivity.class);
+                intent.putExtra("url", item.getUrl());
+                context.startActivity(intent);
+            }
+        });
     }
 
     @Override

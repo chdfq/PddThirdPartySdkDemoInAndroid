@@ -1,6 +1,7 @@
 package com.marten.pdd_sdk_demo.activity;
 
 import android.os.Bundle;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -10,8 +11,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.marten.pdd_sdk_demo.R;
 import com.marten.pdd_sdk_demo.adapter.GoodsAdapter;
 import com.marten.pdd_sdk_demo.adapter.NewsAdapter;
-import com.marten.pdd_sdk_demo.domain.News;
+import com.marten.pdd_sdk_demo.domain.NewsResultData;
 import com.marten.pdd_sdk_demo.tools.HttpTools;
+import com.marten.pdd_sdk_demo.tools.JsonTool;
 import com.pdd.pop.sdk.common.util.JsonUtil;
 import com.pdd.pop.sdk.http.PopClient;
 import com.pdd.pop.sdk.http.PopHttpClient;
@@ -22,10 +24,6 @@ import com.scwang.smart.refresh.layout.api.RefreshLayout;
 import com.scwang.smart.refresh.layout.listener.OnLoadMoreListener;
 import com.scwang.smart.refresh.layout.listener.OnRefreshListener;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -150,33 +148,53 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSuccess(String data, int code) {
                 try {
-                    JSONObject jsonObject = new JSONObject(data);
-                    String result = jsonObject.getString("result");
-                    JSONObject jsonObject2 = new JSONObject(result);
-                    JSONArray jsonArray = jsonObject2.getJSONArray("data");
-                    List<News> list = new ArrayList<>();
-                    for (int i = 0; i < jsonArray.length(); i++) {
-                        JSONObject jsonObject3 = jsonArray.getJSONObject(i);
-                        News news1 = new News();
-                        news1.setUniquekey(jsonObject3.getString("uniquekey"));
-                        news1.setTitle(jsonObject3.getString("title"));
-                        news1.setDate(jsonObject3.getString("date"));
-                        news1.setCategory(jsonObject3.getString("category"));
-                        news1.setAuthor_name(jsonObject3.getString("author_name"));
-                        news1.setUrl(jsonObject3.getString("url"));
-                        news1.setThumbnail_pic_s(jsonObject3.getString("thumbnail_pic_s"));
-//                        news1.setThumbnail_pic_s02(jsonObject3.getString("thumbnail_pic_s02")); //有些item只有thumbnail_pic_s，不然会跳出循环
-//                        news1.setThumbnail_pic_s03(jsonObject3.getString("thumbnail_pic_s03"));
-                        list.add(news1);
+                    //1. fastjson 做json解析
+                    //2. webView
+
+                    NewsResultData newsResultData = JsonTool.jsonToObject(data, NewsResultData.class);
+
+                    if (newsResultData != null && newsResultData.getError_code() == 0) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                NewsAdapter newsAdapter = new NewsAdapter(MainActivity.this, newsResultData.getResult().getData());
+                                mRvGoods.setAdapter(newsAdapter);
+                            }
+                        });
+                    } else {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (newsResultData != null) {
+                                    Toast.makeText(MainActivity.this, newsResultData.getReason(), Toast.LENGTH_SHORT).show();
+                                } else if (newsResultData.getError_code() == 0) {
+                                    Toast.makeText(MainActivity.this, R.string.data_error, Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        });
                     }
 
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            NewsAdapter newsAdapter = new NewsAdapter(MainActivity.this, list);
-                            mRvGoods.setAdapter(newsAdapter);
-                        }
-                    });
+//                    JSONObject jsonObject = new JSONObject(data);
+//                    String result = jsonObject.getString("result");
+//                    JSONObject jsonObject2 = new JSONObject(result);
+//                    JSONArray jsonArray = jsonObject2.getJSONArray("data");
+//                    List<News> list = new ArrayList<>();
+//                    for (int i = 0; i < jsonArray.length(); i++) {
+//                        JSONObject jsonObject3 = jsonArray.getJSONObject(i);
+//                        News news1 = new News();
+//                        news1.setUniquekey(jsonObject3.getString("uniquekey"));
+//                        news1.setTitle(jsonObject3.getString("title"));
+//                        news1.setDate(jsonObject3.getString("date"));
+//                        news1.setCategory(jsonObject3.getString("category"));
+//                        news1.setAuthor_name(jsonObject3.getString("author_name"));
+//                        news1.setUrl(jsonObject3.getString("url"));
+//                        news1.setThumbnail_pic_s(jsonObject3.getString("thumbnail_pic_s"));
+////                        news1.setThumbnail_pic_s02(jsonObject3.getString("thumbnail_pic_s02")); //有些item只有thumbnail_pic_s，不然会跳出循环
+////                        news1.setThumbnail_pic_s03(jsonObject3.getString("thumbnail_pic_s03"));
+//                        list.add(news1);
+//                    }
+
+
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -184,7 +202,16 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onError(String errorMes, int code) {
-
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (errorMes != null && !errorMes.isEmpty()) {
+                            Toast.makeText(MainActivity.this, errorMes, Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(MainActivity.this, R.string.data_error, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
             }
         });
     }

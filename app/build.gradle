@@ -32,6 +32,7 @@ dependencies {
 
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'com.google.android.material:material:1.2.1'
+    implementation 'com.alibaba:fastjson:1.2.73'    //fastjson
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     //SmartRefreshLayout
     implementation  'com.scwang.smart:refresh-layout-kernel:2.0.1'      //核心必须依赖

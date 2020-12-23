@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">pdd_sdk_demo</string>
+    <string name="data_error">数据异常</string>
 </resources>
