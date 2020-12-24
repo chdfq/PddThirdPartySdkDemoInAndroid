@@ -1,0 +1,2 @@
+1. 引入ButterKnife框架
+    ButterKnife用来代替findViewById获取页面控件

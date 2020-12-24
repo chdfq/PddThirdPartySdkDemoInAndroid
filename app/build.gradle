@@ -1,11 +1,11 @@
-plugins {
-    id 'com.android.application'
-}
+apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 30
     buildToolsVersion "30.0.2"
-
+    buildFeatures {
+        viewBinding = true
+    }
     defaultConfig {
         applicationId "com.marten.pdd_sdk_demo"
         minSdkVersion 26
@@ -29,7 +29,7 @@ android {
 }
 
 dependencies {
-
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'com.google.android.material:material:1.2.1'
     implementation 'com.alibaba:fastjson:1.2.73'    //fastjson
@@ -40,13 +40,13 @@ dependencies {
     implementation  'com.scwang.smart:refresh-footer-classics:2.0.1'    //经典加载
     //Gson应用，处理Json数据
     implementation 'com.google.code.gson:gson:2.8.6'
-    implementation files('libs\\pop-sdk-1.10.1-all.jar')
+    implementation files('libs/pop-sdk-1.10.1-all.jar')
     //picasso
     implementation 'com.squareup.picasso:picasso:2.71828'
     //glide
     implementation 'com.github.bumptech.glide:glide:4.11.0'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.11.0'
-    testImplementation 'junit:junit:4.+'
+    testImplementation 'junit:junit:4.13.1'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 }
