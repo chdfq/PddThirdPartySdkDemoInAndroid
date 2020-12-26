@@ -12,13 +12,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.marten.pdd_sdk_demo.R;
 import com.marten.pdd_sdk_demo.adapter.NewsAdapter;
-import com.marten.pdd_sdk_demo.databinding.FragmentNewsBinding;
 import com.marten.pdd_sdk_demo.domain.NewsResultData;
 import com.marten.pdd_sdk_demo.tools.HttpTools;
 import com.marten.pdd_sdk_demo.tools.JsonTool;
+import com.scwang.smart.refresh.layout.SmartRefreshLayout;
 import com.scwang.smart.refresh.layout.api.RefreshLayout;
 import com.scwang.smart.refresh.layout.listener.OnLoadMoreListener;
 import com.scwang.smart.refresh.layout.listener.OnRefreshListener;
@@ -28,9 +29,11 @@ public class NewsFragment extends Fragment {
     private int page = 0;
     private final int pageSize = 30;
     private Context context;
-    private FragmentNewsBinding binding;
     NewsResultData newsResultData;
     NewsAdapter newsAdapter;
+    private View view;
+    private RecyclerView mRvNews;
+    private SmartRefreshLayout mSrlNews;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -40,11 +43,22 @@ public class NewsFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        binding = FragmentNewsBinding.inflate(getLayoutInflater(), container, false);
+        if (view != null){
+            ViewGroup parten = (ViewGroup) view.getParent();
+            if (parten != null){
+                parten.removeView(view);
+            }
+            return view;
+        }
+
+        view = inflater.inflate(R.layout.fragment_news, container, false);
+        mRvNews = view.findViewById(R.id.rv_news);
+        mSrlNews = view.findViewById(R.id.srl_news);
+
         context = getContext();
         initData();
         //下拉刷新
-        binding.srlNews.setOnRefreshListener(new OnRefreshListener() {
+        mSrlNews.setOnRefreshListener(new OnRefreshListener() {
             @Override
             public void onRefresh(@NonNull RefreshLayout refreshLayout) {
                 page = 0;
@@ -52,15 +66,15 @@ public class NewsFragment extends Fragment {
             }
         });
         //上拉加载
-        binding.srlNews.setOnLoadMoreListener(new OnLoadMoreListener() {
+        mSrlNews.setOnLoadMoreListener(new OnLoadMoreListener() {
             @Override
             public void onLoadMore(@NonNull RefreshLayout refreshLayout) {
                 initData();
             }
         });
 
-        binding.rvNews.setLayoutManager(new LinearLayoutManager(context));
-        return binding.getRoot();
+        mRvNews.setLayoutManager(new LinearLayoutManager(context));
+        return view;
     }
 
     public void initData() {
@@ -79,7 +93,7 @@ public class NewsFragment extends Fragment {
                                 if (newsResultData != null && newsResultData.getResult().getData().size() > 0) {
                                     if (page == 1) {
                                         newsAdapter = new NewsAdapter(context, newsResultData.getResult().getData());
-                                        binding.rvNews.setAdapter(newsAdapter);
+                                        mRvNews.setAdapter(newsAdapter);
                                     } else {
                                         if (newsAdapter != null) {
                                             newsAdapter.addAllGoods(newsResultData.getResult().getData());
@@ -87,10 +101,10 @@ public class NewsFragment extends Fragment {
                                     }
 
                                     if (newsResultData.getResult().getData().size() < pageSize) {
-                                        binding.srlNews.setEnableLoadMore(false);
+                                        mSrlNews.setEnableLoadMore(false);
                                     }
                                 } else {
-                                    binding.srlNews.setEnableLoadMore(false);
+                                    mSrlNews.setEnableLoadMore(false);
                                 }
                             }
                         });
@@ -98,7 +112,7 @@ public class NewsFragment extends Fragment {
                         ((Activity) context).runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                binding.srlNews.setEnableLoadMore(false);
+                                mSrlNews.setEnableLoadMore(false);
                                 if (newsResultData != null) {
                                     Toast.makeText(context, newsResultData.getReason(), Toast.LENGTH_SHORT).show();
                                 } else if (newsResultData.getError_code() == 0) {
@@ -111,8 +125,8 @@ public class NewsFragment extends Fragment {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                binding.srlNews.finishRefresh();
-                binding.srlNews.finishLoadMore();
+                mSrlNews.finishRefresh();
+                mSrlNews.finishLoadMore();
             }
 
             @Override
@@ -125,9 +139,9 @@ public class NewsFragment extends Fragment {
                         } else {
                             Toast.makeText(context, R.string.data_error, Toast.LENGTH_SHORT).show();
                         }
-                        binding.srlNews.setEnableLoadMore(false);
-                        binding.srlNews.finishRefresh();
-                        binding.srlNews.finishLoadMore();
+                        mSrlNews.setEnableLoadMore(false);
+                        mSrlNews.finishRefresh();
+                        mSrlNews.finishLoadMore();
                     }
                 });
             }

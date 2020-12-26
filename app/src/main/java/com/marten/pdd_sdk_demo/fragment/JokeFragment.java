@@ -10,11 +10,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.marten.pdd_sdk_demo.R;
 import com.marten.pdd_sdk_demo.databinding.FragmentJokeBinding;
 
 public class JokeFragment extends Fragment {
 
     private Context context;
+    private View view;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -24,8 +26,15 @@ public class JokeFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        FragmentJokeBinding binding = FragmentJokeBinding.inflate(getLayoutInflater());
-        return binding.getRoot();
+        if (view != null){
+            ViewGroup parten = (ViewGroup) view.getParent();
+            if (parten != null){
+                parten.removeView(view);
+            }
+            return view;
+        }
+        view = inflater.inflate(R.layout.fragment_joke, container, false);
+        return view;
     }
 
 }

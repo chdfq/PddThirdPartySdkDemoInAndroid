@@ -9,6 +9,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
+import static com.marten.pdd_sdk_demo.contants.Contants.NEWS_APP_KEY;
+
 public class HttpTools {
     //OkHttp
     //xUtils
@@ -88,7 +90,7 @@ public class HttpTools {
                     //HttpURLConnection 发起连接
                     connection.connect();
 
-                    String body = "key=c60ab75f8ce6994bc6a06ea5adb617db";
+                    String body = "key=" + NEWS_APP_KEY;
                     BufferedWriter writer = new BufferedWriter(
                             new OutputStreamWriter(connection.getOutputStream(), StandardCharsets.UTF_8)
                     );

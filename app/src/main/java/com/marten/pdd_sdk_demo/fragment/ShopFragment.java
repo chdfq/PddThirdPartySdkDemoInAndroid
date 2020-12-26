@@ -13,50 +13,68 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager.widget.ViewPager;
 
-import com.marten.pdd_sdk_demo.adapter.GoodsAdapter;
-import com.marten.pdd_sdk_demo.databinding.FragmentShopBinding;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.marten.pdd_sdk_demo.R;
+import com.marten.pdd_sdk_demo.adapter.PddCatsAdapter;
+import com.marten.pdd_sdk_demo.adapter.ViewPagerAdapter;
+import com.marten.pdd_sdk_demo.domain.PddGoodsCat;
+import com.marten.pdd_sdk_demo.tools.JsonTool;
 import com.pdd.pop.sdk.common.util.JsonUtil;
 import com.pdd.pop.sdk.http.PopClient;
 import com.pdd.pop.sdk.http.PopHttpClient;
-import com.pdd.pop.sdk.http.api.pop.request.PddDdkGoodsSearchRequest;
-import com.pdd.pop.sdk.http.api.pop.response.PddDdkGoodsSearchResponse;
-import com.scwang.smart.refresh.layout.api.RefreshLayout;
-import com.scwang.smart.refresh.layout.listener.OnLoadMoreListener;
-import com.scwang.smart.refresh.layout.listener.OnRefreshListener;
+import com.pdd.pop.sdk.http.api.pop.request.PddGoodsCatsGetRequest;
+import com.pdd.pop.sdk.http.api.pop.response.PddGoodsCatsGetResponse;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import static com.marten.pdd_sdk_demo.contants.Contants.PDD_CLIENT_ID;
+import static com.marten.pdd_sdk_demo.contants.Contants.PDD_CLIENT_SECRET;
 
 public class ShopFragment extends Fragment {
 
     private Context context;
-    private int page = 0;
-    private final int pageSize = 30;
-    private FragmentShopBinding binding;
-    private GoodsAdapter adapter;
+    private RecyclerView mRvCatsList;
+    private ViewPager mVpShop;
+    private View view;
+    private PddCatsAdapter catsAdapter;
+    private List<Fragment> fragments;
+    private ShopGoodsCatFragment shopGoodsCatFragment1, shopGoodsCatFragment2,
+            shopGoodsCatFragment3, shopGoodsCatFragment4,
+            shopGoodsCatFragment5, shopGoodsCatFragment6,
+            shopGoodsCatFragment7, shopGoodsCatFragment8;
+    private ViewPagerAdapter viewPagerAdapter;
 
     private Handler handler = new Handler(Looper.myLooper()) {
         @Override
         public void handleMessage(@NonNull Message msg) {
             super.handleMessage(msg);
-            List<PddDdkGoodsSearchResponse.GoodsSearchResponseGoodsListItem> list = (List<PddDdkGoodsSearchResponse.GoodsSearchResponseGoodsListItem>) msg.obj;
-            if (list != null && list.size() > 0) {
-                if (page == 1) {
-                    adapter = new GoodsAdapter(context, list);
-                    binding.rvGoods.setAdapter(adapter);
-                } else {
-                    if (adapter != null) {
-                        adapter.addAllGoods(list);
+            switch (msg.what) {
+                case 2:
+                    List<PddGoodsCat> catList = (List<PddGoodsCat>) msg.obj;
+                    if (catList.size() > 8) {
+                        List<PddGoodsCat> catList2 = catList.subList(0, 8);
+                        PddGoodsCat cat = catList2.get(0);
+                        cat.setSelected(true);
+                        catList2.set(0, cat);
+                        catsAdapter = new PddCatsAdapter(context, catList2);
+                        catsAdapter.setPddCatsOnClickListener(new PddCatsAdapter.PddCatsOnClickListener() {
+                            @Override
+                            public void catOnClick(int position, PddGoodsCat pddGoodsCat) {
+                                catsAdapter.updateItem(position);
+                                mVpShop.setCurrentItem(position);
+                            }
+                        });
+                        initView(catList2);
+                        mRvCatsList.setAdapter(catsAdapter);
                     }
-                }
-                if (list.size() < pageSize) {
-                    binding.srlShop.setEnableLoadMore(false); //数据已经请求完，则停止加载
-                }
-            } else {
-                binding.srlShop.setEnableLoadMore(false); //没有加载到list，则停止加载
+
+                    break;
             }
-            binding.srlShop.finishLoadMore();
-            binding.srlShop.finishRefresh();
         }
     };
 
@@ -68,55 +86,128 @@ public class ShopFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        binding = FragmentShopBinding.inflate(getLayoutInflater(), container, false);
-        initData();
+        if (view != null) {
+            ViewGroup parten = (ViewGroup) view.getParent();
+            if (parten != null) {
+                parten.removeView(view);
+            }
+            return view;
+        }
+        view = inflater.inflate(R.layout.fragment_shop, container, false);
+        mRvCatsList = view.findViewById(R.id.rv_cats_list);
+        mVpShop = view.findViewById(R.id.vp_shop);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(context);
+        linearLayoutManager.setOrientation(RecyclerView.HORIZONTAL);
+        mRvCatsList.setLayoutManager(linearLayoutManager);
+
+        getCatData();
         context = getContext();
 
-        //下拉刷新
-        binding.srlShop.setOnRefreshListener(new OnRefreshListener() {
-            @Override
-            public void onRefresh(@NonNull RefreshLayout refreshLayout) {
-                page = 0;
-                initData();
-            }
-        });
-        //上拉加载
-        binding.srlShop.setOnLoadMoreListener(new OnLoadMoreListener() {
-            @Override
-            public void onLoadMore(@NonNull RefreshLayout refreshLayout) {
-                initData();
-            }
-        });
-
-        binding.rvGoods.setLayoutManager(new LinearLayoutManager(context));
-
-        return binding.getRoot();
+        return view;
     }
 
-    private void initData() {
+    private void initView(List<PddGoodsCat> catList) {
+        fragments = new ArrayList<>();
+
+        shopGoodsCatFragment1 = new ShopGoodsCatFragment();
+        Bundle bundle = new Bundle();
+        bundle.putSerializable("cat", catList.get(0));
+        shopGoodsCatFragment1.setArguments(bundle);
+
+        shopGoodsCatFragment2 = new ShopGoodsCatFragment();
+        Bundle bundle2 = new Bundle();
+        bundle2.putSerializable("cat", catList.get(1));
+        shopGoodsCatFragment2.setArguments(bundle2);
+
+        shopGoodsCatFragment3 = new ShopGoodsCatFragment();
+        Bundle bundle3 = new Bundle();
+        bundle3.putSerializable("cat", catList.get(2));
+        shopGoodsCatFragment3.setArguments(bundle3);
+
+        shopGoodsCatFragment4 = new ShopGoodsCatFragment();
+        Bundle bundle4 = new Bundle();
+        bundle4.putSerializable("cat", catList.get(3));
+        shopGoodsCatFragment4.setArguments(bundle4);
+
+        shopGoodsCatFragment5 = new ShopGoodsCatFragment();
+        Bundle bundle5 = new Bundle();
+        bundle5.putSerializable("cat", catList.get(4));
+        shopGoodsCatFragment5.setArguments(bundle5);
+
+        shopGoodsCatFragment6 = new ShopGoodsCatFragment();
+        Bundle bundle6 = new Bundle();
+        bundle6.putSerializable("cat", catList.get(5));
+        shopGoodsCatFragment6.setArguments(bundle6);
+
+        shopGoodsCatFragment7 = new ShopGoodsCatFragment();
+        Bundle bundle7 = new Bundle();
+        bundle7.putSerializable("cat", catList.get(6));
+        shopGoodsCatFragment7.setArguments(bundle7);
+
+        shopGoodsCatFragment8 = new ShopGoodsCatFragment();
+        Bundle bundle8 = new Bundle();
+        bundle8.putSerializable("cat", catList.get(7));
+        shopGoodsCatFragment8.setArguments(bundle8);
+
+        fragments.add(shopGoodsCatFragment1);
+        fragments.add(shopGoodsCatFragment2);
+        fragments.add(shopGoodsCatFragment3);
+        fragments.add(shopGoodsCatFragment4);
+        fragments.add(shopGoodsCatFragment5);
+        fragments.add(shopGoodsCatFragment6);
+        fragments.add(shopGoodsCatFragment7);
+        fragments.add(shopGoodsCatFragment8);
+
+        viewPagerAdapter = new ViewPagerAdapter(getChildFragmentManager(),fragments);
+        mVpShop.setAdapter(viewPagerAdapter);
+        mVpShop.setCurrentItem(0);
+        mVpShop.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                catsAdapter.updateItem(position);
+                mVpShop.setCurrentItem(position);
+                mRvCatsList.scrollToPosition(position);
+
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+
+            }
+        });
+    }
+
+    private void getCatData() {
         //子线程不能访问网络，这里新建一个线程
         new Thread(new Runnable() {
             @Override
             public void run() {
-                page++;
-                String clientId = "4f8ed144e98d4e7b9868136b14b68b43";
-                String clientSecret = "deb2747ad6c918f87d5fc99071e3e57e5df46f24";
+                String clientId = PDD_CLIENT_ID;
+                String clientSecret = PDD_CLIENT_SECRET;
                 PopClient client = new PopHttpClient(clientId, clientSecret);
-                PddDdkGoodsSearchRequest request = new PddDdkGoodsSearchRequest();
-                request.setPage(page);
-                request.setPageSize(pageSize);
-                PddDdkGoodsSearchResponse response = null;
+
+                PddGoodsCatsGetRequest request = new PddGoodsCatsGetRequest();
+                request.setParentCatId(0L);
+                PddGoodsCatsGetResponse response = null;
                 try {
                     response = client.syncInvoke(request);
+                    String data = JsonUtil.transferToJson(response);
+                    JSONObject jsonObject = JSON.parseObject(data);
+                    String listData = jsonObject.getJSONObject("goods_cats_get_response").getString("goods_cats_list");
+                    List<PddGoodsCat> catList = JsonTool.jsonToList(listData, PddGoodsCat.class);
+                    Message message = new Message();
+                    message.what = 2; //what判断哪里发的message
+                    message.obj = catList;
+                    handler.sendMessage(message);
+
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                String string = JsonUtil.transferToJson(response);
-                List<PddDdkGoodsSearchResponse.GoodsSearchResponseGoodsListItem> goodsList = response.getGoodsSearchResponse().getGoodsList();
-                Message message = new Message();
-                message.what = 1; //what判断哪里发的message
-                message.obj = goodsList;
-                handler.sendMessage(message);
             }
         }).start();
     }

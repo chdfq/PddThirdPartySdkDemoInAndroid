@@ -14,6 +14,7 @@ import com.marten.pdd_sdk_demo.fragment.JokeFragment;
 import com.marten.pdd_sdk_demo.fragment.MineFragment;
 import com.marten.pdd_sdk_demo.fragment.NewsFragment;
 import com.marten.pdd_sdk_demo.fragment.ShopFragment;
+import com.marten.pdd_sdk_demo.view.NoScrollViewPager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +29,7 @@ public class NewMainActivity extends BaseActivity {
     private MineFragment mineFragment;
     private RadioGroup mRg;
     private RadioButton mRb1, mRb2, mRb3, mRb4;
-    private ViewPager mVp;
+    private NoScrollViewPager mVp;
 
     @Override
     public void initView() {
