@@ -8,7 +8,16 @@ public class PddGoodsCat implements Serializable {
     private String cat_name;
     private Long parent_cat_id;
     private Long cat_id;
+    private int icon;
     private boolean selected;
+
+    public int getIcon() {
+        return icon;
+    }
+
+    public void setIcon(int icon) {
+        this.icon = icon;
+    }
 
     public Integer getLevel() {
         return level;
@@ -57,6 +66,7 @@ public class PddGoodsCat implements Serializable {
                 ", cat_name='" + cat_name + '\'' +
                 ", parent_cat_id=" + parent_cat_id +
                 ", cat_id=" + cat_id +
+                ", icon=" + icon +
                 ", selected=" + selected +
                 '}';
     }

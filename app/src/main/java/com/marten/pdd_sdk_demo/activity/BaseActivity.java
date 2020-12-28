@@ -41,6 +41,11 @@ public abstract class BaseActivity extends FragmentActivity implements View.OnCl
         mTvTitle.setText(title);
     }
 
+    public void setBackImage() {
+        mIvBack.setVisibility(View.VISIBLE);
+    }
+
+
     public void setRightImage1(int imgId, View.OnClickListener onClickListener) {
         mIvRight1.setVisibility(View.VISIBLE);
         mIvRight1.setImageResource(imgId);

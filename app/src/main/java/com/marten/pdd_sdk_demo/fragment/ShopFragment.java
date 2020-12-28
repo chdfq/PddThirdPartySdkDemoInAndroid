@@ -1,6 +1,7 @@
 package com.marten.pdd_sdk_demo.fragment;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -8,6 +9,7 @@ import android.os.Message;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -19,6 +21,7 @@ import androidx.viewpager.widget.ViewPager;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.marten.pdd_sdk_demo.R;
+import com.marten.pdd_sdk_demo.activity.PddCatsActivity;
 import com.marten.pdd_sdk_demo.adapter.PddCatsAdapter;
 import com.marten.pdd_sdk_demo.adapter.ViewPagerAdapter;
 import com.marten.pdd_sdk_demo.domain.PddGoodsCat;
@@ -29,6 +32,7 @@ import com.pdd.pop.sdk.http.PopHttpClient;
 import com.pdd.pop.sdk.http.api.pop.request.PddGoodsCatsGetRequest;
 import com.pdd.pop.sdk.http.api.pop.response.PddGoodsCatsGetResponse;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,13 +45,16 @@ public class ShopFragment extends Fragment {
     private RecyclerView mRvCatsList;
     private ViewPager mVpShop;
     private View view;
+    private ImageView mIvCats;
     private PddCatsAdapter catsAdapter;
     private List<Fragment> fragments;
+    private FirstShopGoodsCatFragment firstShopGoodsCatFragment;
     private ShopGoodsCatFragment shopGoodsCatFragment1, shopGoodsCatFragment2,
             shopGoodsCatFragment3, shopGoodsCatFragment4,
             shopGoodsCatFragment5, shopGoodsCatFragment6,
             shopGoodsCatFragment7, shopGoodsCatFragment8;
     private ViewPagerAdapter viewPagerAdapter;
+    private List<PddGoodsCat> catList;
 
     private Handler handler = new Handler(Looper.myLooper()) {
         @Override
@@ -55,12 +62,15 @@ public class ShopFragment extends Fragment {
             super.handleMessage(msg);
             switch (msg.what) {
                 case 2:
-                    List<PddGoodsCat> catList = (List<PddGoodsCat>) msg.obj;
+                    catList = (List<PddGoodsCat>) msg.obj;
                     if (catList.size() > 8) {
+                        catList.remove(1);
                         List<PddGoodsCat> catList2 = catList.subList(0, 8);
-                        PddGoodsCat cat = catList2.get(0);
+                        PddGoodsCat cat = new PddGoodsCat();
+                        cat.setCat_id(-1l);
+                        cat.setCat_name("全部");
                         cat.setSelected(true);
-                        catList2.set(0, cat);
+                        catList2.add(0, cat);
                         catsAdapter = new PddCatsAdapter(context, catList2);
                         catsAdapter.setPddCatsOnClickListener(new PddCatsAdapter.PddCatsOnClickListener() {
                             @Override
@@ -96,6 +106,15 @@ public class ShopFragment extends Fragment {
         view = inflater.inflate(R.layout.fragment_shop, container, false);
         mRvCatsList = view.findViewById(R.id.rv_cats_list);
         mVpShop = view.findViewById(R.id.vp_shop);
+        mIvCats = view.findViewById(R.id.all_cat);
+        mIvCats.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(context, PddCatsActivity.class);
+                intent.putExtra("cats", (Serializable) catList);
+                context.startActivity(intent);
+            }
+        });
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(context);
         linearLayoutManager.setOrientation(RecyclerView.HORIZONTAL);
         mRvCatsList.setLayoutManager(linearLayoutManager);
@@ -108,6 +127,8 @@ public class ShopFragment extends Fragment {
 
     private void initView(List<PddGoodsCat> catList) {
         fragments = new ArrayList<>();
+
+        firstShopGoodsCatFragment = new FirstShopGoodsCatFragment();
 
         shopGoodsCatFragment1 = new ShopGoodsCatFragment();
         Bundle bundle = new Bundle();
@@ -149,6 +170,7 @@ public class ShopFragment extends Fragment {
         bundle8.putSerializable("cat", catList.get(7));
         shopGoodsCatFragment8.setArguments(bundle8);
 
+        fragments.add(firstShopGoodsCatFragment);
         fragments.add(shopGoodsCatFragment1);
         fragments.add(shopGoodsCatFragment2);
         fragments.add(shopGoodsCatFragment3);
